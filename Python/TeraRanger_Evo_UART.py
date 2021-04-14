@@ -126,7 +126,7 @@ if __name__ == "__main__":
             # Calculate Forier Transform
             print(data)
             X = fft(data)
-            freqs = fftfreq(len(data), d = 614.3/115200) # d = 1/baudrate = sample rate
+            freqs = fftfreq(len(data), d = 1/115200) # d = 1/baudrate = sample rate
         
 
 
