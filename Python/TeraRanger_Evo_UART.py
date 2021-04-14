@@ -25,16 +25,14 @@ class TeraRanger:
 
         self.port = self.findEvo()
 
-        if port == 'NULL':
-            print("Could not find Evo. Exiting")
-            return -1
-
+        if self.port == 'NULL':
+            print("Could not find Evo")
+            self._close()
         else:
+            print("Found Evo")
             self.evo = self.openEvo(port)
 
-        return 1
-
-    def findEvo():
+    def findEvo(self):
         # Find Live Ports, return port name if found, NULL if not
         print('Scanning all live ports on this PC')
         ports = list(serial.tools.list_ports.comports())
@@ -45,7 +43,8 @@ class TeraRanger:
                 return p[0]
         return 'NULL'
 
-    def openEvo(slef,portname):
+    def openEvo(self):
+        portname = self.port
         print('Attempting to open port...')
         # Open the Evo and catch any exceptions thrown by the OS
         print(portname)
@@ -61,7 +60,8 @@ class TeraRanger:
         print('Serial port opened')
         return self.evo
 
-    def get_evo_range(self,evo_serial):
+    def get_evo_range(self):
+        evo_serial = self.evo
         crc8_fn = crcmod.predefined.mkPredefinedCrcFun('crc-8')
         # Read one byte
         data = evo_serial.read(1)
@@ -103,10 +103,29 @@ class TeraRanger:
                 self.freqs = fftfreq(len(self.data), d = 1/115200) # d = 1/baudrate = sample rate
 
                  # print the positive frequency that has the most correlation
-                self.bpm = self.freqs[np.argmax(np.abs(X[0:int(len(X)/2)]))]
+                self.bpm = 120*self.freqs[np.argmax(np.abs(X[0:int(len(X)/2)]))]
             except serial.serialutil.SerialException:
                 print("Device disconnected (or multiple access on port). Exiting...")
                 break
 
-    def close(self):
-        self.evo.close()
+    def _close(self):
+        print("Close Evo")
+        # self.evo.close()
+
+if __name__ == "__main__":
+
+    Evo60 = TeraRanger()
+    data = freqs = []
+
+    while True:
+        temp = Evo60.get_evo_range()
+        data.append(temp)
+
+        # Calculate Forier Transform
+        X = fft(data)
+        freqs = fftfreq(len(data), d = 1/115200) # d = 1/baudrate = sample rate
+
+         # print the positive frequency that has the most correlation
+        bpm = 120*freqs[np.argmax(np.abs(X[0:int(len(X)/2)]))]
+
+        print(temp,bpm = " bpm");
