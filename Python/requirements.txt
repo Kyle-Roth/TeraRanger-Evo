@@ -1,3 +1,2 @@
 pyserial
 crcmod
-opencv-contrib-python
