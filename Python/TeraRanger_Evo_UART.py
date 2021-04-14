@@ -27,7 +27,6 @@ class TeraRanger:
 
         if self.port == 'NULL':
             print("Could not find Evo")
-            self._close()
         else:
             print("Found Evo")
             self.evo = self.openEvo(port)
@@ -109,8 +108,7 @@ class TeraRanger:
                 break
 
     def _close(self):
-        print("Close Evo")
-        # self.evo.close()
+        self.evo.close()
 
 if __name__ == "__main__":
 
@@ -128,4 +126,4 @@ if __name__ == "__main__":
          # print the positive frequency that has the most correlation
         bpm = 120*freqs[np.argmax(np.abs(X[0:int(len(X)/2)]))]
 
-        print(temp,bpm = " bpm");
+        print(temp,bpm + " bpm");
