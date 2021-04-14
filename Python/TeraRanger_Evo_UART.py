@@ -10,6 +10,7 @@ import numpy as np
 import serial.tools.list_ports
 import crcmod.predefined  # To install: pip install crcmod
 from scipy.fftpack import fft, fftfreq
+import matplotlib.pyplot as plt
 
 class TeraRanger:
 
@@ -29,7 +30,7 @@ class TeraRanger:
             print("Could not find Evo")
         else:
             print("Found Evo")
-            self.evo = self.openEvo(port)
+            self.evo = self.openEvo()
 
     def findEvo(self):
         # Find Live Ports, return port name if found, NULL if not
@@ -75,7 +76,7 @@ class TeraRanger:
                 return "CRC mismatch. Check connection or make sure only one progam access the sensor port."
         # Check special cases (limit values)
         else:
-            return "Wating for frame header"
+            return "Waiting for frame header"
 
         # Checking error codes
         if rng == 65535: # Sensor measuring above its maximum limit
@@ -113,17 +114,33 @@ class TeraRanger:
 if __name__ == "__main__":
 
     Evo60 = TeraRanger()
-    data = freqs = []
+    data = freqs = X = []
 
     while True:
         temp = Evo60.get_evo_range()
-        data.append(temp)
+        if temp != 'Waiting for frame header':
+            data.append(50*temp)
+            # print(temp)
+        
+        if len(data) == 1500:
+            # Calculate Forier Transform
+            print(data)
+            X = fft(data)
+            freqs = fftfreq(len(data), d = 614.3/115200) # d = 1/baudrate = sample rate
+        
 
-        # Calculate Forier Transform
-        X = fft(data)
-        freqs = fftfreq(len(data), d = 1/115200) # d = 1/baudrate = sample rate
 
-         # print the positive frequency that has the most correlation
-        bpm = 120*freqs[np.argmax(np.abs(X[0:int(len(X)/2)]))]
+             # print the positive frequency that has the most correlation
+            bpm = 120*freqs[np.argmax(np.abs(X[1:int(len(X)/2)]))]
 
-        print(temp,bpm + " bpm");
+            print(freqs)
+            print(f"{bpm} bpm");
+            break
+            
+            
+    fig, ax = plt.subplots()
+    ax.plot(data)
+    
+    fig2,ax2 = plt.subplots()
+    ax2.plot(freqs[1:],np.abs(X[1:]))
+    plt.show()
