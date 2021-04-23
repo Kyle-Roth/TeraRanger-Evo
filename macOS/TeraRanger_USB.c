@@ -64,7 +64,7 @@ uint8_t* time_diff(struct timeval x , struct timeval y)
 
     *diff = (double)y_ms - (double)x_ms;
 
-    printf("%llu,",*diff);
+    // printf("%llu,",*diff);
     return (uint8_t*) diff;
 }
 
@@ -234,8 +234,10 @@ int main()
 
    /* initialize time calculations */
   struct timeval before,after;
-  int file = open("./output", O_WRONLY | O_CREAT | O_TRUNC);
-  uint8_t* output = malloc(sizeof(uint8_t)*6);
+  int Tfile = open("./Toutput.bin", O_WRONLY | O_CREAT | O_TRUNC);
+  int Dfile = open("./Doutput.bin", O_WRONLY | O_CREAT | O_TRUNC);
+  uint32_t* Toutput = malloc(sizeof(uint32_t));
+  uint16_t* Doutput = malloc(sizeof(uint16_t));
   uint8_t* buffer = NULL;
 
   gettimeofday(&before , NULL);
@@ -259,8 +261,8 @@ int main()
     uint16_t temp2 = 0;
     uint8_t CRC = 0;
 
-      /* collect 20,000 measurements*/
-    for(uint32_t i= 0; i < 20000 ; i++)
+      /* collect 100,000 measurements*/
+    for(uint32_t i= 0; i < 100000 ; i++)
     {
       readPort(fd, buffer, 4); // read 4 bytes
       gettimeofday(&after , NULL); // get current time
@@ -281,38 +283,47 @@ int main()
       }
 
       temp = time_diff(before,after);
-      temp2 = (*(buffer+1) << 8) | *(buffer+2);  // build final number
-      temp3 = (*(temp+7) << 56) | (*(temp+6) << 48) | (*(temp+5) << 40) | (*(temp+4) << 32) | (*(temp+3) << 24) | (*(temp+2) << 16) | (*(temp+1) << 8) | (*(temp+0) << 0);  // build final number
+      // temp2 = (*(buffer+1) << 8) | *(buffer+2);  // build final number
+      *Toutput = (*(temp+7) << 56) | (*(temp+6) << 48) | (*(temp+5) << 40) | (*(temp+4) << 32) | (*(temp+3) << 24) | (*(temp+2) << 16) | (*(temp+1) << 8) | (*(temp+0) << 0);  // build final number
+      *Doutput = (*(buffer+1)<< 8) | *(buffer+2);
 
-      printf("%d\n",temp3);
-      printf("%02x%02x%02x%02x%02x%02x%02x%02x\n",*(temp+7),*(temp+6),*(temp+5),*(temp+4),*(temp+3),*(temp+2),*(temp+1),*(temp+0));
-      continue;
 
-      *(output+0) = *(temp+0);
-      *(output+1) = *(temp+1);
-      *(output+2) = *(temp+2);
-      *(output+3) = *(temp+3);
-      *(output+4) = *(buffer+1);
-      *(output+5) = *(buffer+2);
+      // printf("%d\n",temp3);
+      // printf("%02x%02x%02x%02x%02x%02x%02x%02x\n",*(temp+7),*(temp+6),*(temp+5),*(temp+4),*(temp+3),*(temp+2),*(temp+1),*(temp+0));
+      // continue;
 
-      write(fd, output, 6);
+      // *(output+0) = *(temp+0);
+      // *(output+1) = *(temp+1);
+      // *(output+2) = *(temp+2);
+      // *(output+3) = *(temp+3);
+      // *(output+4) = *(buffer+1);
+      // *(output+5) = *(buffer+2);
+      write(Tfile, Toutput, 4);
+      write(Dfile, Doutput, 2);
+      // printf("%d,%d\n",*Toutput,*Doutput);
 
+      if(i%1000 == 0)
+        printf("%d\n",i);
         /* Print Measurement */
-      printf("%d,",(*(output+3) << 24) | (*(output+2) << 16) | (*(output+1) << 8) | (*(output+0)));
-      switch((*(buffer+1) << 8) | *(buffer+2))
-      {
-        case 0: printf("-inf\n");
-                break;
-        case 1: printf("-1\n");
-                break;
-        case 0xFFFF:  printf("+inf\n");
-                      break;
-        default: printf("%d\n",(*(output+4) << 8) | (*(output+4)));
-      }
+      // printf("%d,",(*(output+3) << 24) | (*(output+2) << 16) | (*(output+1) << 8) | (*(output+0)));
+      // switch((*(buffer+1) << 8) | *(buffer+2))
+      // {
+      //   case 0: printf("-inf\n");
+      //           break;
+      //   case 1: printf("-1\n");
+      //           break;
+      //   case 0xFFFF:  printf("+inf\n");
+      //                 break;
+      //   default: printf("%d\n",(*(output+4) << 8) | (*(output+4)));
+      // }
     }
+
+    printf("%d,%d\n",*Toutput,*Doutput);
   }
 
   free(buffer);
   close(fd);
+  close(Tfile);
+  close(Dfile);
   return 0;
 }
