@@ -261,8 +261,8 @@ int main()
     uint16_t temp2 = 0;
     uint8_t CRC = 0;
 
-      /* collect 100,000 measurements*/
-    for(uint32_t i= 0; i < 100000 ; i++)
+      /* collect 10,000 measurements*/
+    for(uint32_t i= 0; i < 10000 ; i++)
     {
       readPort(fd, buffer, 4); // read 4 bytes
       gettimeofday(&after , NULL); // get current time
